@@ -1,6 +1,8 @@
 package com.example.contact_page
 
 import android.Manifest
+import android.content.Context
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.ContactsContract
@@ -18,6 +20,8 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 // 1. Data Model
 data class Contact(
@@ -32,6 +36,8 @@ class MainActivity : AppCompatActivity() {
 
     private val contacts = mutableListOf<Contact>()
     private lateinit var adapter: ContactsAdapter
+    private val PREFS_NAME = "TrustedContactsPrefs"
+    private val KEY_CONTACTS = "contacts_list"
 
     // Permission Launcher
     private val requestPermissionLauncher = registerForActivityResult(
@@ -98,12 +104,8 @@ class MainActivity : AppCompatActivity() {
         val rvContacts = findViewById<RecyclerView>(R.id.rvContacts)
         rvContacts.layoutManager = LinearLayoutManager(this)
 
-        // Initial Mock Data
-        contacts.addAll(listOf(
-            Contact("Mom", "+1 (555) 123-4567", "M", "#F48FB1", true),
-            Contact("Sarah Johnson", "+1 (555) 234-5678", "S", "#90CAF9", false),
-            Contact("Dad", "+1 (555) 345-6789", "D", "#CE93D8", false)
-        ))
+        // Load Contacts
+        loadContacts()
 
         // Initialize Adapter with Add Click Callback and Delete Callback
         adapter = ContactsAdapter(contacts, {
@@ -137,6 +139,7 @@ class MainActivity : AppCompatActivity() {
         
         contacts.add(newContact)
         adapter.notifyDataSetChanged()
+        saveContacts()
     }
 
     private fun deleteContact(contact: Contact) {
@@ -145,6 +148,7 @@ class MainActivity : AppCompatActivity() {
             contacts.removeAt(position)
             adapter.notifyItemRemoved(position)
             adapter.notifyItemRangeChanged(position, contacts.size)
+            saveContacts()
         }
     }
 
@@ -158,6 +162,37 @@ class MainActivity : AppCompatActivity() {
             "#B39DDB"  // Deep Purple
         )
         return colors.random()
+    }
+
+    private fun saveContacts() {
+        val sharedPreferences: SharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        val gson = Gson()
+        val json = gson.toJson(contacts)
+        editor.putString(KEY_CONTACTS, json)
+        editor.apply()
+    }
+
+    private fun loadContacts() {
+        val sharedPreferences: SharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val gson = Gson()
+        val json = sharedPreferences.getString(KEY_CONTACTS, null)
+        val type = object : TypeToken<MutableList<Contact>>() {}.type
+
+        if (json != null) {
+            val savedContacts: MutableList<Contact> = gson.fromJson(json, type)
+            contacts.clear()
+            contacts.addAll(savedContacts)
+        } else {
+            // Initial Mock Data if no data saved
+            contacts.clear()
+            contacts.addAll(listOf(
+                Contact("Mom", "+1 (555) 123-4567", "M", "#F48FB1", true),
+                Contact("Sarah Johnson", "+1 (555) 234-5678", "S", "#90CAF9", false),
+                Contact("Dad", "+1 (555) 345-6789", "D", "#CE93D8", false)
+            ))
+            saveContacts() // Save default data for next time
+        }
     }
 }
 
