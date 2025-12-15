@@ -1,0 +1,12 @@
+<resources>
+    <color name="primary_blue">#2962FF</color>
+    <color name="primary_light_blue">#E3F2FD</color>
+    <color name="text_dark">#212121</color>
+    <color name="text_gray">#757575</color>
+    <color name="bg_gray">#F5F5F5</color>
+    <color name="badge_yellow_bg">#FFF8E1</color>
+    <color name="badge_yellow_text">#FFA000</color>
+    <color name="avatar_pink">#F48FB1</color>
+    <color name="avatar_blue">#90CAF9</color>
+    <color name="avatar_purple">#CE93D8</color>
+</resources>
